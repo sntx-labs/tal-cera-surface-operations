@@ -1,0 +1,20 @@
+{
+  "name": "lilac-frontier",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test": "node --test scripts/*.test.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "three": "0.172.0"
+  },
+  "devDependencies": {
+    "playwright": "1.55.1",
+    "vite": "6.4.3"
+  }
+}
