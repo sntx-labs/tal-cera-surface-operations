@@ -56,6 +56,7 @@ postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),post));
 const materials=[],meshes=[],controls=[];let manifest,ready=false,scheduled=false,baseCamera,sampleIndex=0,maskAnchors,renderedFrames=0,peakInspectZoom=1,movingFrames=0,hallway,landscape,sourceFov=28,lastMode;
 const motion=new InspectionMotion(settings),inspection=bindInspection(renderer.domElement,motion,requestRender);
 const walk=new WalkMotion(settings),navigation=bindWalk(renderer.domElement,walk,()=>{updateCamera();requestRender()},message=>status.textContent=message);
+let touchControls;
 const payload=()=>({project:'lilac-frontier',version:1,settings:{...settings}});
 function halton(i,b){let r=0,f=1;while(i>0){f/=b;r+=f*(i%b);i=Math.floor(i/b)}return r}
 function requestRender(){sampleIndex=0;if(window.lilac)window.lilac.settled=false;if(!ready||scheduled)return;motion.lastTime=null;walk.lastTime=null;scheduled=true;requestAnimationFrame(refine)}
@@ -204,6 +205,16 @@ window.lilac={ready:false,settings,payload,setSettings,reset,render,diagnostics:
   const stats=a=>{const s=a.slice(5).sort((a,b)=>a-b);return s.length?{meanMs:s.reduce((a,b)=>a+b,0)/s.length,medianMs:s[Math.floor(s.length/2)],p95Ms:s[Math.floor(s.length*.95)]}:null};const info=gl.getExtension('WEBGL_debug_renderer_info');
   return {frames:count,cpu:stats(cpu),raf:stats(raf),gpu:stats(gpu),renderer:info?gl.getParameter(info.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),drawingBuffer:[target.width,target.height],...renderer.info.render};
  }};
+// The mobile dock sits below the scene and works without pointer lock.
+function touchWalk(keyX,keyY,x,y){
+ if(x||y){if(settings.viewMode!=='walk')setSettings({viewMode:'walk'});walk.active=true;}
+ walk.touch[keyX]=x;walk.touch[keyY]=y;requestRender();
+}
+touchControls=window.LabsTouchControls?.({label:'Hallway touch controls',panel:panelEl,pads:[
+ {label:'Move',change:(x,y)=>touchWalk('side','forward',x,-y)},
+ {label:'Look',change:(x,y)=>touchWalk('lookX','lookY',x,y)}
+],buttons:[{label:'Home',click:()=>{touchControls.reset();navigation.stop();walk.reset();updateCamera();requestRender()}}]});
+
 try{
  manifest=await(await fetchOK(`${import.meta.env.BASE_URL}assets/scene.json`)).json();
  const packed=await(await fetchOK(`${import.meta.env.BASE_URL}assets/${manifest.geometry.url}`)).arrayBuffer();

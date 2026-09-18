@@ -8,8 +8,8 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 
 export class WalkMotion {
   constructor(settings){this.settings=settings;this.keys=new Set();this.reset()}
-  reset(){this.x=0;this.y=-14.8;this.yaw=0;this.pitch=.065;this.vx=0;this.vy=0;this.lastTime=null;this.active=false;this.locked=false;this.moving=false;this.lookDirty=false;this.keys.clear()}
-  stop(){this.keys.clear();this.vx=0;this.vy=0;this.moving=false;this.lastTime=null}
+  reset(){this.touch={side:0,forward:0,lookX:0,lookY:0};this.x=0;this.y=-14.8;this.yaw=0;this.pitch=.065;this.vx=0;this.vy=0;this.lastTime=null;this.active=false;this.locked=false;this.moving=false;this.lookDirty=false;this.keys.clear()}
+  stop(){Object.assign(this.touch,{side:0,forward:0,lookX:0,lookY:0});this.keys.clear();this.vx=0;this.vy=0;this.moving=false;this.lastTime=null}
   look(dx,dy){this.yaw+=dx*.002*this.settings.lookSensitivity;this.pitch=clamp(this.pitch-dy*.002*this.settings.lookSensitivity,-1.35,1.35);this.lookDirty=true}
   move(dx,dy){
     // Small steps and separate axes allow sliding without tunnelling through cabinets.
@@ -27,8 +27,8 @@ export class WalkMotion {
     const dt=this.lastTime===null?1/60:clamp((time-this.lastTime)/1000,0,.05);this.lastTime=time;
     if(!this.active||this.settings.viewMode!=='walk'){this.stop();return false}
     const old=[this.x,this.y,this.yaw,this.pitch],lookChanged=this.lookDirty;this.lookDirty=false;
-    const side=Number(this.keys.has('KeyD'))-Number(this.keys.has('KeyA'));
-    const forward=Number(this.keys.has('KeyW'))-Number(this.keys.has('KeyS'));
+    const side=clamp(Number(this.keys.has('KeyD'))-Number(this.keys.has('KeyA'))+this.touch.side,-1,1);
+    const forward=clamp(Number(this.keys.has('KeyW'))-Number(this.keys.has('KeyS'))+this.touch.forward,-1,1);
     const norm=Math.max(1,Math.hypot(side,forward));
     const speed=this.settings.walkSpeed*(this.keys.has('ShiftLeft')||this.keys.has('ShiftRight')?1.7:1);
     const vx=(Math.cos(this.yaw)*side+Math.sin(this.yaw)*forward)/norm*speed;
@@ -37,8 +37,8 @@ export class WalkMotion {
     this.vx+=(vx-this.vx)*blend;this.vy+=(vy-this.vy)*blend;
     if(Math.abs(this.vx)<.001)this.vx=0;if(Math.abs(this.vy)<.001)this.vy=0;
     this.move(this.vx*dt,this.vy*dt);
-    const turn=Number(this.keys.has('ArrowRight'))-Number(this.keys.has('ArrowLeft'));
-    const tilt=Number(this.keys.has('ArrowUp'))-Number(this.keys.has('ArrowDown'));
+    const turn=clamp(Number(this.keys.has('ArrowRight'))-Number(this.keys.has('ArrowLeft'))+this.touch.lookX,-1,1);
+    const tilt=clamp(Number(this.keys.has('ArrowUp'))-Number(this.keys.has('ArrowDown'))-this.touch.lookY,-1,1);
     this.yaw+=turn*1.35*dt;this.pitch=clamp(this.pitch+tilt*.9*dt,-1.35,1.35);
     this.moving=!!(this.vx||this.vy||turn||tilt||lookChanged);
     return lookChanged||old.some((v,i)=>v!==[this.x,this.y,this.yaw,this.pitch][i]);
@@ -52,9 +52,10 @@ export function bindWalk(canvas,walk,wake,status,win=window,doc=document){
   const releaseDrag=()=>{if(drag&&canvas.hasPointerCapture(drag.id))canvas.releasePointerCapture(drag.id);drag=null};
   const stop=()=>{wantsControl=false;walk.stop();walk.active=false;releaseDrag();if(doc.pointerLockElement===canvas)doc.exitPointerLock();if(enabled())status('Click the scene to explore · WASD + mouse · Esc to release');wake()};
   const fallback=error=>{lockPending=false;if(error?.message||!canvas.dataset.pointerLockError)canvas.dataset.pointerLockError=error?.message||error?.type||'unavailable';canvas.dataset.pointerLockStatus='unavailable';if(wantsControl&&enabled()&&doc.activeElement===canvas){walk.active=true;status('Mouse capture unavailable · click to retry · hold and drag to look')}wake()};
-  const enter=()=>{
+  const enter=({touch=win.matchMedia?.('(pointer:coarse)')?.matches||false}={})=>{
     if(!enabled())return;
     releaseDrag();canvas.focus({preventScroll:true});wantsControl=true;walk.active=true;walk.lastTime=null;
+    if(touch){status('Use Move and Look below, or drag the scene to look.');wake();return}
     if(!canvas.requestPointerLock){fallback();return}
     if(doc.pointerLockElement!==canvas&&!lockPending){
       lockPending=true;
@@ -65,7 +66,8 @@ export function bindWalk(canvas,walk,wake,status,win=window,doc=document){
     wake();
   };
   canvas.addEventListener('pointerdown',event=>{
-    if(!enabled()||event.button!==0||event.isPrimary===false)return;
+    if(!enabled()||event.button!==0||(event.isPrimary===false&&event.pointerType!=='touch'))return;
+    if(event.pointerType==='touch'){event.preventDefault();enter({touch:true});drag={id:event.pointerId,x:event.clientX,y:event.clientY};canvas.setPointerCapture(event.pointerId);return;}
     canvas.classList.add('pointer-focused');
     // Native locking begins on the completed click, after the mouse button is up.
     // Pointer capture is only a fallback and must not compete with pointer lock.
@@ -73,7 +75,7 @@ export function bindWalk(canvas,walk,wake,status,win=window,doc=document){
       drag={id:event.pointerId,x:event.clientX,y:event.clientY};canvas.setPointerCapture(event.pointerId);
     }
   });
-  canvas.addEventListener('click',event=>{if(event.button===0&&doc.pointerLockElement!==canvas)enter()});
+  canvas.addEventListener('click',event=>{if(event.pointerType!=='touch'&&event.button===0&&doc.pointerLockElement!==canvas)enter()});
   doc.addEventListener('mousemove',event=>{
     if(!enabled()||!walk.active)return;
     if(doc.pointerLockElement===canvas){walk.look(event.movementX,event.movementY);wake()}
@@ -82,7 +84,8 @@ export function bindWalk(canvas,walk,wake,status,win=window,doc=document){
     if(!enabled()||!walk.active||doc.pointerLockElement===canvas||!drag||event.pointerId!==drag.id)return;
     walk.look(event.clientX-drag.x,event.clientY-drag.y);drag.x=event.clientX;drag.y=event.clientY;wake();
   });
-  doc.addEventListener('pointerup',event=>{if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);drag=null});
+  doc.addEventListener('pointerup',event=>{if(drag?.id!==event.pointerId)return;if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);drag=null});
+  canvas.addEventListener('lostpointercapture',event=>{if(drag?.id===event.pointerId)drag=null});
   canvas.addEventListener('pointercancel',stop);
   doc.addEventListener('pointerlockchange',()=>{
     lockPending=false;walk.locked=doc.pointerLockElement===canvas;
