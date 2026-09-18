@@ -17,13 +17,13 @@ const panelEl=document.querySelector('#panel'), shell=document.querySelector('#a
 if(query.get('panel')==='closed')sessionStorage.setItem('sh-panel-collapsed','true');
 else if(query.get('panel')==='open')sessionStorage.setItem('sh-panel-collapsed','false');
 const panel=new window.SHPanel(panelEl);
-const intro=document.createElement('div');intro.className='panel-intro';intro.innerHTML='<strong>Lilac Frontier</strong>Move your pointer to look around.<br>Hold to inspect; release to return.<br>Press ` to open or close controls.';panelEl.prepend(intro);
+const intro=document.createElement('div');intro.className='panel-intro';intro.innerHTML='<strong>Tal Cera: Surface Operations</strong>Move your pointer to look around.<br>Hold to inspect; release to return.<br>Press ` to open or close controls.';panelEl.prepend(intro);
 const status=document.createElement('div');status.className='panel-status';status.setAttribute('role','status');status.textContent='Loading source geometry…';intro.after(status);
 const dock=()=>{shell.classList.toggle('closed',panelEl.classList.contains('collapsed'));};dock();window.addEventListener('sh-panel-toggle',dock);
 for(const event of ['pointerdown','pointermove','pointerup','wheel'])panelEl.addEventListener(event,e=>e.stopPropagation());
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance',preserveDrawingBuffer:true,premultipliedAlpha:false});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.setPixelRatio(1);renderer.info.autoReset=false;viewport.append(renderer.domElement);
-renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Lilac Frontier interactive scene. Move the pointer to look around. Hold the primary button or Space to zoom in; release to return.');
+renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Tal Cera: Surface Operations interactive scene. Move the pointer to look around. Hold the primary button or Space to zoom in; release to return.');
 const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(), postScene=new THREE.Scene(), postCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 let target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4});
 let historyA=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,depthBuffer:false}),historyB=historyA.clone();
@@ -57,7 +57,7 @@ const materials=[],meshes=[],controls=[];let manifest,ready=false,scheduled=fals
 const motion=new InspectionMotion(settings),inspection=bindInspection(renderer.domElement,motion,requestRender);
 const walk=new WalkMotion(settings),navigation=bindWalk(renderer.domElement,walk,()=>{updateCamera();requestRender()},message=>status.textContent=message);
 let touchControls;
-const payload=()=>({project:'lilac-frontier',version:1,settings:{...settings}});
+const payload=()=>({project:'tal-cera-surface-operations',version:1,settings:{...settings}});
 function halton(i,b){let r=0,f=1;while(i>0){f/=b;r+=f*(i%b);i=Math.floor(i/b)}return r}
 function requestRender(){sampleIndex=0;if(window.lilac)window.lilac.settled=false;if(!ready||scheduled)return;motion.lastTime=null;walk.lastTime=null;scheduled=true;requestAnimationFrame(refine)}
 function refine(time){
@@ -125,8 +125,8 @@ function apply(){
  }
  if(lastMode!==settings.viewMode){
   navigation.stop();inspection.cancel();motion.reset();walk.reset();lastMode=settings.viewMode;
-  intro.innerHTML=settings.viewMode==='walk'?'<strong>Lilac Frontier</strong>Click the scene to explore.<br>WASD to walk · mouse to look.<br>Shift to move faster · Esc to release.<br>Press ` to open or close controls.':'<strong>Lilac Frontier</strong>Move your pointer to look around.<br>Hold to inspect; release to return.<br>Press ` to open or close controls.';
-  renderer.domElement.setAttribute('aria-label',settings.viewMode==='walk'?'Lilac Frontier observation hallway. Click to enter. WASD to walk, mouse or arrow keys to look, Escape to release.':'Lilac Frontier window study. Move to look around; hold to inspect.');
+  intro.innerHTML=settings.viewMode==='walk'?'<strong>Tal Cera: Surface Operations</strong>Click the scene to explore.<br>WASD to walk · mouse to look.<br>Shift to move faster · Esc to release.<br>Press ` to open or close controls.':'<strong>Tal Cera: Surface Operations</strong>Move your pointer to look around.<br>Hold to inspect; release to return.<br>Press ` to open or close controls.';
+  renderer.domElement.setAttribute('aria-label',settings.viewMode==='walk'?'Tal Cera: Surface Operations observation hallway. Click to enter. WASD to walk, mouse or arrow keys to look, Escape to release.':'Tal Cera: Surface Operations window study. Move to look around; hold to inspect.');
   if(ready)status.textContent=settings.viewMode==='walk'?'Click the scene to explore · WASD + mouse · Esc to release':'Move to explore · hold to inspect';
  }
  framing.el.hidden=settings.viewMode==='walk';interaction.el.hidden=settings.viewMode==='walk';
@@ -193,7 +193,7 @@ panel.button('Copy JSON',async()=>{
  }
  status.textContent=copied?'Settings copied.':'Select and copy the settings below.';
 });
-panel.button('Save PNG',async()=>{if(!ready)return;while(!window.lilac.settled)await new Promise(requestAnimationFrame);const a=document.createElement('a');a.download='lilac-frontier.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
+panel.button('Save PNG',async()=>{if(!ready)return;while(!window.lilac.settled)await new Promise(requestAnimationFrame);const a=document.createElement('a');a.download='tal-cera-surface-operations.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
 if(proof&&query.has('benchmark'))panel.button('Measure frame time',async()=>{status.textContent='Measuring this view…';const result=await window.lilac.benchmark(120);renderer.domElement.dataset.benchmark=JSON.stringify(result);status.textContent='Frame measurement complete.';requestRender()});
 async function fetchOK(url){const response=await fetch(url);if(!response.ok)throw Error(`${url}: HTTP ${response.status}`);return response}
 function rect(el){const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}

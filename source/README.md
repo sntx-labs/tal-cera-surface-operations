@@ -1,4 +1,4 @@
-# Lilac Frontier source
+# Tal Cera: Surface Operations source
 
 The editable browser modules are in `lilac-frontier/src/`; `lilac-frontier/THIRD_PARTY.md` identifies third-party code and its original sources. The Blender-derived noise shader retains its GPL-2.0-or-later notice. License texts accompany the scene at `../licenses/`.
 
