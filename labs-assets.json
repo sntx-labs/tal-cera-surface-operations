@@ -1,0 +1,19 @@
+{
+  "/experiments/lilac-frontier/assets/geometry.bin.gz": {
+    "size": 39238532,
+    "sha256": "7f8819e2d2c651d6f92b5b8de4254aace608adef5e3f9cac73b75f202c9f98b2",
+    "type": "application/octet-stream",
+    "parts": [
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-00.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-01.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-02.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-03.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-04.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-05.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-06.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-07.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-08.bin",
+      "/experiments/lilac-frontier/assets/geometry.bin.gz.parts/part-09.bin"
+    ]
+  }
+}
