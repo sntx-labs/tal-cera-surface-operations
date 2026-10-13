@@ -1,6 +1,6 @@
 # Tal Cera: Surface Operations
 
-Syntax Labs experiment. This repository is private while being prepared for release.
+Syntax Labs experiment. Public source repository for the linked live experience.
 
 [Live experience](https://labs.sntx.co/experiments/lilac-frontier/) · [Run and edit this project](LABS.md)
 
